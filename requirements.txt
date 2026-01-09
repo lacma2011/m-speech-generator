@@ -1,0 +1,21 @@
+# Core TTS library
+TTS>=0.22.0
+
+# Audio processing
+scipy
+numpy
+librosa
+soundfile
+pydub
+
+# For XTTS and deep learning
+torch>=2.0.0
+torchaudio
+
+# Utilities
+tqdm
+requests
+
+# Optional: for web interface
+flask
+flask-cors

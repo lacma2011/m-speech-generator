@@ -1,0 +1,61 @@
+services:
+  voice-generator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voice-generator
+    volumes:
+      # Mount source code for development
+      - .:/app
+      # Persist models between container restarts
+      - voice_models:/app/models
+      # Voice samples directory
+      - ./voice_samples:/app/voice_samples
+      # Output directory
+      - ./output:/app/output
+    ports:
+      # Web UI port (optional)
+      - "5002:5002"
+    environment:
+      - PYTHONUNBUFFERED=1
+    stdin_open: true
+    tty: true
+    # Uncomment for GPU support (requires nvidia-docker)
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  # GPU-enabled service (use this if you have NVIDIA GPU)
+  voice-generator-gpu:
+    build:
+      context: .
+      dockerfile: Dockerfile.gpu
+    container_name: voice-generator-gpu
+    volumes:
+      - .:/app
+      - voice_models:/app/models
+      - ./voice_samples:/app/voice_samples
+      - ./output:/app/output
+    ports:
+      - "5002:5002"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NVIDIA_VISIBLE_DEVICES=all
+    stdin_open: true
+    tty: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    profiles:
+      - gpu
+
+volumes:
+  voice_models:

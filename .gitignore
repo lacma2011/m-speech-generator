@@ -1,0 +1,71 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Models (large files)
+models/
+*.pth
+*.pt
+*.ckpt
+*.bin
+
+# Generated audio output
+output/*.wav
+output/*.mp3
+output/*.ogg
+output/*.flac
+
+# Uploaded voice samples (keep .gitkeep)
+voice_samples/*.wav
+voice_samples/*.mp3
+voice_samples/*.ogg
+voice_samples/*.flac
+
+# Datasets
+datasets/
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
