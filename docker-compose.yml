@@ -4,6 +4,10 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: voice-generator
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     volumes:
       # Mount source code for development
       - .:/app
@@ -35,6 +39,10 @@ services:
       context: .
       dockerfile: Dockerfile.gpu
     container_name: voice-generator-gpu
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+      - 1.1.1.1
     volumes:
       - .:/app
       - voice_models:/app/models

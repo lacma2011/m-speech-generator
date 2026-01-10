@@ -4,23 +4,64 @@ A Docker-based voice cloning system using **XTTS v2** from Coqui TTS. Clone any 
 
 ## Quick Start
 
-### 1. Build and Start the Container
+### 1. Build the Docker Container
 
 ```bash
-# Build the container
 docker compose build
+```
 
+This will install all dependencies including PyTorch, TTS, and other required libraries (~2-3GB download).
+
+### 2. Start the Web Interface
+
+```bash
+docker compose run --rm voice-generator python web_server.py
+```
+
+Then open http://localhost:5002 in your browser. Upload a voice sample and generate speech!
+
+**Note**: First run will download the XTTS v2 model (~1.5GB). This only happens once.
+
+### Alternative: Interactive Shell
+
+```bash
 # Start an interactive session (CPU)
 docker compose run --rm voice-generator
 
-# OR with GPU support (requires nvidia-docker)
-docker compose --profile gpu run --rm voice-generator-gpu
+# Inside the container, you can run any command:
+python web_server.py
+# or
+python clone_voice.py --help
 ```
 
-### 2. Clone a Voice (inside container)
+### GPU Support (Optional)
 
 ```bash
-# Basic voice cloning
+# Build and run GPU version (requires nvidia-docker)
+docker compose --profile gpu build
+docker compose --profile gpu run --rm voice-generator-gpu python web_server.py
+```
+
+## Usage Options
+
+### Web Interface (Recommended)
+
+The easiest way to use the system:
+
+```bash
+docker compose run --rm voice-generator python web_server.py
+```
+
+1. Open http://localhost:5002
+2. Upload a voice sample (6+ seconds of clear speech)
+3. Enter text to generate
+4. Click "Generate Speech"
+5. Download your cloned voice audio
+
+### Command Line
+
+```bash
+# Inside the container
 python clone_voice.py \
     --text "Hello, this is a test of voice cloning technology." \
     --speaker /app/voice_samples/your_sample.wav \
@@ -33,25 +74,7 @@ python clone_voice.py \
     --output output.wav
 ```
 
-### 3. Web Interface
-
-```bash
-# Start the web server
-python web_server.py
-
-# Access at http://localhost:5002
-```
-
-## Usage Options
-
-### Command Line
-
-```bash
-# Inside the container
-python clone_voice.py --help
-```
-
-Options:
+**Command Line Options:**
 - `--text, -t`: Text to convert to speech (required)
 - `--speaker, -s`: Path(s) to speaker audio files (required)
 - `--output, -o`: Output file path (default: output/cloned_speech.wav)
@@ -128,6 +151,10 @@ This project uses **XTTS v2** from Coqui TTS:
 ## Troubleshooting
 
 **First run is slow**: The model (~1.5GB) downloads on first use. Subsequent runs are faster.
+
+**DNS/Network errors during model download**: The docker-compose.yml includes DNS servers (8.8.8.8, 1.1.1.1) to avoid connection issues. If problems persist, run `python download_model_configs.py` inside the container.
+
+**Import errors (transformers, torch)**: Ensure you rebuilt the container after cloning (`docker compose build`). The requirements.txt pins compatible versions.
 
 **Out of memory**: Try reducing text length or use CPU mode. GPU requires ~4GB VRAM.
 

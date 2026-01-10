@@ -1,6 +1,9 @@
 # Core TTS library
 TTS>=0.22.0
 
+# Transformers - pin to compatible version for TTS
+transformers>=4.33.0,<4.40.0
+
 # Audio processing
 scipy
 numpy
@@ -9,8 +12,8 @@ soundfile
 pydub
 
 # For XTTS and deep learning
-torch>=2.0.0
-torchaudio
+torch>=2.0.0,<2.6.0
+torchaudio<2.6.0
 
 # Utilities
 tqdm
