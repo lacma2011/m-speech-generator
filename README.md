@@ -2,7 +2,32 @@
 
 A Docker-based voice cloning system using **XTTS v2** from Coqui TTS. Clone any voice with just 6+ seconds of audio!
 
-## Quick Start
+## Quick Start for macOS
+
+**Easiest method** - Use the launcher script:
+
+```bash
+# Option 1: Run from terminal
+./start.sh
+
+# Option 2: Double-click start.command in Finder
+```
+
+That's it! The script will:
+- Check if Docker is running
+- Build the image (first time only)
+- Start the web server
+- Auto-open your browser to http://localhost:5002
+
+**To stop**: Press `Ctrl+C` in the terminal, or run `./stop.sh`
+
+**Script options**:
+- `./start.sh --rebuild` - Force rebuild the Docker image
+- `./start.sh --no-browser` - Don't auto-open browser
+
+---
+
+## Manual Setup (All Platforms)
 
 ### 1. Build the Docker Container
 

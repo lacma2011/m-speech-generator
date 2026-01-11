@@ -25,8 +25,20 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies (torch already included in base image)
+# Pin transformers to compatible version for TTS library
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir TTS>=0.22.0 scipy numpy librosa soundfile pydub tqdm requests flask flask-cors
+    pip install --no-cache-dir \
+    TTS>=0.22.0 \
+    'transformers>=4.33.0,<4.40.0' \
+    scipy \
+    numpy \
+    librosa \
+    soundfile \
+    pydub \
+    tqdm \
+    requests \
+    flask \
+    flask-cors
 
 # Copy application code
 COPY . .
