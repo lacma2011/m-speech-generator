@@ -10,17 +10,7 @@ import os
 import argparse
 from pathlib import Path
 
-import torch
-from TTS.api import TTS
-
-
-def get_device():
-    """Determine the best available device."""
-    if torch.cuda.is_available():
-        return "cuda"
-    elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-        return "mps"
-    return "cpu"
+from model_loader import get_model_loader
 
 
 def clone_and_speak(
@@ -38,12 +28,18 @@ def clone_and_speak(
         output_path: Where to save the generated audio
         language: Language code (en, es, fr, de, it, pt, pl, tr, ru, nl, cs, ar, zh-cn, ja, hu, ko)
     """
-    device = get_device()
-    print(f"Using device: {device}")
+    # Load model (public or custom based on environment variables)
+    loader = get_model_loader()
+    model_info = loader.get_model_info()
 
-    # Initialize XTTS v2 model
-    print("Loading XTTS v2 model (this may take a moment on first run)...")
-    tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
+    print(f"Using device: {model_info['device']}")
+    print(f"Model type: {model_info['type']}")
+
+    if model_info['type'] == 'custom':
+        print(f"  Custom config: {model_info['config']}")
+        print(f"  Custom checkpoint: {model_info['checkpoint']}")
+
+    loader.load_model()
 
     # Ensure output directory exists
     os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
@@ -58,7 +54,7 @@ def clone_and_speak(
     print(f"Generating speech for: '{text[:50]}...'")
 
     # Generate speech with cloned voice
-    tts.tts_to_file(
+    loader.tts_to_file(
         text=text,
         file_path=output_path,
         speaker_wav=speaker_wav_path,

@@ -10,20 +10,30 @@ A Docker-based voice cloning system using **XTTS v2** from Coqui TTS. The system
 
 ### Core Components
 
-1. **clone_voice.py** - Main voice cloning script for CLI usage
-   - Uses XTTS v2 model from Coqui TTS
-   - Handles device selection (CUDA/MPS/CPU)
+1. **model_loader.py** - Unified model loading system
+   - Handles both public XTTS v2 and custom fine-tuned models
+   - Uses environment variables for configuration:
+     - `CUSTOM_MODEL_PATH`: Path to custom checkpoint directory
+     - `CUSTOM_CONFIG_PATH`: Path to custom config.json
+   - Automatic device selection (CUDA/MPS/CPU)
+   - Singleton pattern ensures model loads only once
+   - Falls back to public model if custom paths not set
+
+2. **clone_voice.py** - Main voice cloning script for CLI usage
+   - Uses model_loader for flexible model selection
    - Supports single or multiple speaker audio files for better quality
    - Language support: 16+ languages (en, es, fr, de, it, pt, pl, tr, ru, nl, cs, ar, zh-cn, ja, hu, ko)
 
-2. **web_server.py** - Flask-based web interface
+3. **web_server.py** - Flask-based web interface
    - Provides REST API (`/api/clone`, `/api/models`) and HTML UI
-   - Global TTS model loaded once and reused
+   - Uses model_loader for flexible model selection
+   - Global model loaded once and reused via singleton
    - Handles file uploads (WAV, MP3, OGG, FLAC)
    - Generates unique IDs for uploaded/generated files
    - Serves generated audio via `/audio/<filename>` endpoint
+   - `/api/models` endpoint shows current model type (public/custom)
 
-3. **train_voice.py** - Fine-tuning utilities (advanced usage)
+4. **train_voice.py** - Fine-tuning utilities (advanced usage)
    - Dataset preparation (`prepare` command)
    - Training guidance (`train` command)
    - Note: Full fine-tuning requires 12GB+ VRAM and is mostly a guide script
@@ -98,6 +108,48 @@ python train_voice.py prepare \
 python train_voice.py train --help
 ```
 
+### Using Custom Fine-Tuned Models
+
+After training a custom model, you can deploy it using environment variables:
+
+```bash
+# CLI with custom model
+docker compose run --rm \
+    -e CUSTOM_MODEL_PATH=/app/models/my_custom_model \
+    -e CUSTOM_CONFIG_PATH=/app/models/my_custom_model/config.json \
+    voice-generator python clone_voice.py \
+    --text "Your text" \
+    --speaker sample.wav \
+    --output output.wav
+
+# Web server with custom model
+docker compose run --rm \
+    -e CUSTOM_MODEL_PATH=/app/models/my_custom_model \
+    -e CUSTOM_CONFIG_PATH=/app/models/my_custom_model/config.json \
+    voice-generator python web_server.py
+```
+
+**Training and Deployment Workflow:**
+
+1. **Train on powerful machine** (12GB+ VRAM required)
+   - Use Coqui's official training scripts from https://github.com/coqui-ai/TTS
+   - Or use XTTS fine-tuning demo: `TTS/demos/xtts_ft_demo/xtts_demo.py`
+   - Training produces checkpoint files and config.json
+
+2. **Copy model files to deployment machine**
+   - Transfer checkpoint directory
+   - Transfer config.json file
+
+3. **Deploy with environment variables**
+   - Set `CUSTOM_MODEL_PATH` to checkpoint directory
+   - Set `CUSTOM_CONFIG_PATH` to config.json path
+   - Both CLI and web server will automatically use custom model
+
+4. **Verification**
+   - Check logs on startup - shows "Model type: custom"
+   - Call `/api/models` endpoint - shows custom model info
+   - If env vars not set, falls back to public XTTS v2
+
 ## Technical Details
 
 ### Model Information
@@ -124,11 +176,17 @@ The system automatically selects the best available device:
 
 ## Important Implementation Notes
 
-- The web server loads the TTS model globally on startup to avoid reloading on each request
+- **Model Loading**: Both CLI and web server use `model_loader.py` for unified model management
+  - Singleton pattern ensures model loads only once per process
+  - Automatically detects custom vs public model based on environment variables
+  - Web server pre-loads model on startup to avoid per-request loading
+- **Custom Models**: Use `CUSTOM_MODEL_PATH` and `CUSTOM_CONFIG_PATH` environment variables
+  - If not set, automatically falls back to public XTTS v2 model
+  - Useful for deploying fine-tuned models trained on powerful machines
 - File uploads use unique IDs to prevent conflicts
 - Audio samples should be 6-30 seconds of clear speech for best results
 - Multiple speaker samples improve cloning quality significantly
-- First run will be slow due to model download (~1.5GB)
+- First run will be slow due to model download (~1.5GB for public model)
 
 ## Dependency Requirements & Known Issues
 

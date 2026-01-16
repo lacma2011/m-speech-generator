@@ -148,6 +148,7 @@ speech_generator/
 ├── docker-compose.yml   # Container orchestration
 ├── requirements.txt     # Python dependencies
 ├── clone_voice.py       # Main voice cloning script
+├── model_loader.py      # Model loading (public/custom models)
 ├── train_voice.py       # Fine-tuning utilities
 ├── web_server.py        # Web interface
 ├── voice_samples/       # Your voice samples go here
@@ -167,6 +168,41 @@ python train_voice.py prepare \
 # See training guide
 python train_voice.py train --help
 ```
+
+**Note**: The `train_voice.py` script is primarily a guide. For actual fine-tuning, use Coqui's official training scripts from https://github.com/coqui-ai/TTS
+
+### Using Custom Fine-Tuned Models
+
+After training a custom model, you can use it by setting environment variables:
+
+```bash
+# Set environment variables for custom model
+export CUSTOM_MODEL_PATH=/path/to/your/checkpoint/directory
+export CUSTOM_CONFIG_PATH=/path/to/your/config.json
+
+# Run with custom model (CLI)
+docker compose run --rm \
+    -e CUSTOM_MODEL_PATH=/app/models/my_custom_model \
+    -e CUSTOM_CONFIG_PATH=/app/models/my_custom_model/config.json \
+    voice-generator python clone_voice.py \
+    --text "Your text here" \
+    --speaker sample.wav \
+    --output output.wav
+
+# Run web server with custom model
+docker compose run --rm \
+    -e CUSTOM_MODEL_PATH=/app/models/my_custom_model \
+    -e CUSTOM_CONFIG_PATH=/app/models/my_custom_model/config.json \
+    voice-generator python web_server.py
+```
+
+**Workflow**:
+1. Train your model on a powerful machine (requires 12GB+ VRAM)
+2. Copy the checkpoint files and config.json to your deployment server
+3. Set the environment variables pointing to your model files
+4. Run the CLI or web server - it will automatically use your custom model!
+
+The system will automatically detect and use your custom model when these variables are set. If they're not set, it falls back to the public XTTS v2 model.
 
 ## GPU Support
 

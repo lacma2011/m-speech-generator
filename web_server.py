@@ -9,12 +9,11 @@ import os
 import uuid
 from pathlib import Path
 
-import torch
 from flask import Flask, request, jsonify, send_file, render_template_string
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 
-from TTS.api import TTS
+from model_loader import get_model_loader
 
 app = Flask(__name__)
 CORS(app)
@@ -27,23 +26,16 @@ ALLOWED_EXTENSIONS = {"wav", "mp3", "ogg", "flac"}
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-# Global TTS model (loaded once)
-tts_model = None
+# Global model loader (loaded once)
+model_loader = None
 
 
-def get_device():
-    if torch.cuda.is_available():
-        return "cuda"
-    return "cpu"
-
-
-def get_tts():
-    global tts_model
-    if tts_model is None:
-        device = get_device()
-        print(f"Loading XTTS v2 model on {device}...")
-        tts_model = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(device)
-    return tts_model
+def get_loader():
+    global model_loader
+    if model_loader is None:
+        model_loader = get_model_loader()
+        model_loader.load_model()
+    return model_loader
 
 
 def allowed_file(filename):
@@ -241,8 +233,8 @@ def clone_voice():
         output_path = os.path.join(OUTPUT_FOLDER, output_filename)
 
         # Generate speech
-        tts = get_tts()
-        tts.tts_to_file(
+        loader = get_loader()
+        loader.tts_to_file(
             text=text,
             file_path=output_path,
             speaker_wav=input_path,
@@ -268,20 +260,43 @@ def serve_audio(filename):
 
 @app.route("/api/models")
 def list_models():
-    """List available TTS models."""
-    return jsonify({
-        "current_model": "tts_models/multilingual/multi-dataset/xtts_v2",
+    """List current model information."""
+    loader = get_loader()
+    model_info = loader.get_model_info()
+
+    response = {
+        "model_type": model_info["type"],
+        "device": model_info["device"],
         "supported_languages": [
             "en", "es", "fr", "de", "it", "pt", "pl", "tr",
             "ru", "nl", "cs", "ar", "zh-cn", "ja", "hu", "ko"
         ]
-    })
+    }
+
+    if model_info["type"] == "custom":
+        response["custom_config"] = model_info["config"]
+        response["custom_checkpoint"] = model_info["checkpoint"]
+    else:
+        response["model_name"] = model_info["model"]
+
+    return jsonify(response)
 
 
 if __name__ == "__main__":
     print("Starting Voice Cloning Web Server...")
     print("Loading model (this may take a moment)...")
-    get_tts()  # Pre-load model
-    print("Server ready!")
+
+    loader = get_loader()
+    model_info = loader.get_model_info()
+
+    print(f"Model loaded successfully!")
+    print(f"  Type: {model_info['type']}")
+    print(f"  Device: {model_info['device']}")
+
+    if model_info['type'] == 'custom':
+        print(f"  Config: {model_info['config']}")
+        print(f"  Checkpoint: {model_info['checkpoint']}")
+
+    print("\nServer ready!")
     print("Open http://localhost:5002 in your browser")
     app.run(host="0.0.0.0", port=5002, debug=False)
