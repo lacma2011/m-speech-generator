@@ -25,6 +25,19 @@ That's it! The script will:
 - `./start.sh --rebuild` - Force rebuild the Docker image
 - `./start.sh --no-browser` - Don't auto-open browser
 
+## 🌐 Deploy to the Cloud
+
+Want to make your Voice Generator accessible online?
+
+👉 **See [DEPLOYMENT.md](DEPLOYMENT.md)** for a complete guide to deploying on DigitalOcean (~$24/month)
+
+The guide covers:
+- Step-by-step DigitalOcean setup
+- Custom domain configuration
+- HTTPS setup with free SSL
+- Auto-start on reboot
+- Security best practices
+
 ---
 
 ## Manual Setup (All Platforms)
