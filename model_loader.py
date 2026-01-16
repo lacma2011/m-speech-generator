@@ -46,12 +46,18 @@ class XTTSModelLoader:
         custom_model_path = os.getenv("CUSTOM_MODEL_PATH")
         custom_config_path = os.getenv("CUSTOM_CONFIG_PATH")
 
-        if custom_model_path and custom_config_path:
-            self.model = self._load_custom_model(custom_model_path, custom_config_path)
-            self.is_custom_model = True
-        else:
-            self.model = self._load_public_model()
-            self.is_custom_model = False
+        try:
+            if custom_model_path and custom_config_path:
+                self.model = self._load_custom_model(custom_model_path, custom_config_path)
+                self.is_custom_model = True
+            else:
+                self.model = self._load_public_model()
+                self.is_custom_model = False
+        except Exception as e:
+            print(f"ERROR loading model: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
         return self.model
 
