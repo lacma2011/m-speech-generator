@@ -64,9 +64,18 @@ class XTTSModelLoader:
     def _load_public_model(self):
         """Load the public XTTS v2 model."""
         print(f"Loading public XTTS v2 model on {self.device}...")
-        tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2").to(self.device)
-        print("Public model loaded successfully!")
-        return tts
+        print("Initializing TTS model...")
+        try:
+            tts = TTS("tts_models/multilingual/multi-dataset/xtts_v2")
+            print("TTS model initialized, moving to device...")
+            tts = tts.to(self.device)
+            print("Public model loaded successfully!")
+            return tts
+        except Exception as e:
+            print(f"ERROR in _load_public_model: {e}")
+            import traceback
+            traceback.print_exc()
+            raise
 
     def _load_custom_model(self, checkpoint_dir: str, config_path: str):
         """Load a custom fine-tuned XTTS model."""
